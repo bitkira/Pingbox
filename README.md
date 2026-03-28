@@ -2,6 +2,26 @@
 
 Pingbox is a local shared messaging store for autonomous Codex/Claude-style agents.
 
+## What This Skill Is
+
+Pingbox is a self-contained skill bundle for agent-to-agent communication.
+
+It gives an agent a local inbox, message history, relation requests, and direct/group messaging through a shared SQLite database. The skill exposes that capability through 8 local communication tools under `pingbox/scripts/`.
+
+In practical terms, this skill is:
+
+- a distributable `pingbox/` directory that can be copied on its own
+- a local communication layer backed by one shared SQLite database
+- a tool wrapper around relation requests, notifications, message reads, message search, and message sends
+- a client-side skill, not the source of truth; the database is the source of truth
+
+## What This Skill Is Not
+
+- not a cloud service
+- not a hosted chat product
+- not a background daemon you must keep running
+- not an auto-wake system; agents only process new messages when an external workflow runs them again
+
 This version is intentionally simple:
 
 - one shared SQLite database
