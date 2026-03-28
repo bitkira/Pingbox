@@ -61,6 +61,6 @@ def load_agent_context(profile_path: str | None = None) -> tuple[OpenChatStore, 
     store = open_store(profile=merged["profile"])
     agent = store.get_agent(agent_uid)
     if not agent:
-        raise SystemExit("CONFIG ERROR: agent_uid was not found in the local Pingbox database.")
+        raise SystemExit("CONFIG ERROR: agent_uid was not found in the local OpenChat database.")
     merged["agent"] = agent
     return store, merged

@@ -1,6 +1,6 @@
 # Local Contract
 
-This skill is a client for the shared local Pingbox store. The store, not the skill, owns:
+This skill is a client for the shared local OpenChat store. The store, not the skill, owns:
 
 - business truth
 - permissions

@@ -1,11 +1,11 @@
 ---
-name: pingbox
-description: Operate the shared local Pingbox store for multi-agent communication. Use when Codex needs to communicate with other agents or groups through the local store: check unread notifications, read or search message history, send text messages, request a new relation, review incoming relation requests, accept or reject a relation request, or remove an existing relation. Use only when the communication client environment is configured for the current agent identity.
+name: openchatskill
+description: Operate the shared local OpenChat store for multi-agent communication. Use when Codex needs to communicate with other agents or groups through the local store: check unread notifications, read or search message history, send text messages, request a new relation, review incoming relation requests, accept or reject a relation request, or remove an existing relation. Use only when the communication client environment is configured for the current agent identity.
 ---
 
-# Pingbox
+# OpenChatSkill
 
-This file is the AI-facing operating contract after Pingbox is already installed. `README.md` gives the high-level overview and installation shape; this file tells the agent how to use the local Pingbox tools and how to behave once the skill is available.
+This file is the AI-facing operating contract after OpenChatSkill is already installed. `README.md` gives the high-level overview and installation shape; this file tells the agent how to use the local OpenChat tools and how to behave once the skill is available.
 
 Use this skill to operate the shared local messaging store that owns:
 
@@ -51,12 +51,12 @@ Local helpers live in this skill's `scripts/` directory:
 
 ## First-Run Bootstrap
 
-Use this bootstrap flow when the agent needs Pingbox for the first time and no profile is configured yet.
+Use this bootstrap flow when the agent needs OpenChat for the first time and no profile is configured yet.
 
 1. Run `python3 scripts/read_notifications.py`.
 2. If it works, use the existing identity and continue.
 3. If it reports a configuration error, ask the user one short question:
-   `What stable Pingbox name should I use, or do you already have a profile path for me?`
+   `What stable OpenChat name should I use, or do you already have a profile path for me?`
 4. If the user gives a profile path, reuse that profile instead of creating a new identity.
 5. If the user gives only a name, create a profile with `python3 scripts/create_agent_profile.py <NAME>`.
 6. If the user does not answer but the agent must communicate now, generate one stable fallback name, create a profile once, and reuse it.
@@ -64,7 +64,7 @@ Use this bootstrap flow when the agent needs Pingbox for the first time and no p
 
 Best practice:
 
-- each agent should have its own stable Pingbox identity
+- each agent should have its own stable OpenChat identity
 - ask the owner for the name only on first setup, not on every conversation
 - if the owner is unavailable and communication cannot wait, self-name once and keep that identity stable
 - if the owner does not care about the exact handle, use the provided display name and let the script derive the handle

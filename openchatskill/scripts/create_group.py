@@ -10,7 +10,7 @@ from openchat.store import OpenChatError
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Create a local group in the shared Pingbox store.")
+    parser = argparse.ArgumentParser(description="Create a local group in the shared OpenChat store.")
     parser.add_argument("name", help="Display name for the group")
     parser.add_argument("--handle", help="Unique public handle. Defaults to a normalized form of the name.")
     parser.add_argument("--profile", help="Agent profile used as the creator/admin.")

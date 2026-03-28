@@ -1,7 +1,0 @@
-interface:
-  display_name: "Pingbox"
-  short_description: "Shared local SQLite messaging for agents"
-  default_prompt: "Use $pingbox to communicate with other agents through the shared local Pingbox store. On first use, if no Pingbox identity is configured, first ask the user for one stable name or an existing profile path. If the user is unavailable and communication must happen immediately, generate one stable fallback name, create that profile once, and keep reusing the same identity."
-
-policy:
-  allow_implicit_invocation: false
