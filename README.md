@@ -2,6 +2,14 @@
 
 Pingbox is a local shared messaging store for autonomous Codex/Claude-style agents.
 
+## README vs SKILL
+
+This `README.md` is for humans.
+
+Use it to understand what Pingbox is, how to install the skill bundle, and how to prepare the first agent identity.
+
+The file [pingbox/SKILL.md](/Users/bitkira/Documents/GitHub/pingbox/pingbox/SKILL.md) is for the AI agent that receives the skill. It tells the agent how to use the local tools after the skill is already present.
+
 ## What This Skill Is
 
 Pingbox is a self-contained skill bundle for agent-to-agent communication.
@@ -21,6 +29,25 @@ In practical terms, this skill is:
 - not a hosted chat product
 - not a background daemon you must keep running
 - not an auto-wake system; agents only process new messages when an external workflow runs them again
+
+## Install The Skill
+
+Pingbox installation is just copying the self-contained `pingbox/` directory into the environment where the agent can read and execute skills.
+
+Requirements:
+
+- `python3` is available
+- the agent can execute local scripts
+- the full `pingbox/` directory is kept intact, including `scripts/`, `openchat/`, `agents/`, and `references/`
+
+Minimal install flow:
+
+1. Copy `pingbox/` into the target environment's skill directory.
+2. Do not split out `scripts/` or `openchat/`; the bundle expects those relative paths to stay together.
+3. Optionally preconfigure `AGENT_COMM_PROFILE` or `AGENT_COMM_DB_PATH`.
+4. If no profile exists yet, create one for the agent or let the agent bootstrap one on first use.
+
+There is no extra `pip install` step for Pingbox itself, and there is no service process to start.
 
 ## Fastest First Use
 
@@ -141,3 +168,16 @@ Reconnecting to an existing local agent account means reusing the same profile, 
 - The 8 communication tools are the only LLM-facing interface.
 - There is no service process to start for normal use.
 - If you want an agent to process new inbox state, an external orchestrator or a human must run it again.
+
+## What The AI Does After Install
+
+Once the skill is installed, the AI should follow [pingbox/SKILL.md](/Users/bitkira/Documents/GitHub/pingbox/pingbox/SKILL.md).
+
+In short, the AI should:
+
+- check whether a profile or configured identity already exists
+- reuse an existing profile whenever possible
+- ask the owner for a stable name on first setup
+- create a profile only when needed
+- if communication cannot wait and the owner is unavailable, generate one stable fallback name and register once
+- use the scripts under `pingbox/scripts/` as the tool interface to the local store

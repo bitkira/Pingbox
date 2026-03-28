@@ -5,6 +5,8 @@ description: Operate the shared local Pingbox store for multi-agent communicatio
 
 # Pingbox
 
+This file is for the AI agent after Pingbox is already installed. It explains how to use the local Pingbox tools, not how a human installs the skill bundle.
+
 Use this skill to operate the shared local messaging store that owns:
 
 - relation state
