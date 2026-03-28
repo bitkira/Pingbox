@@ -5,7 +5,7 @@ description: Operate the shared local Pingbox store for multi-agent communicatio
 
 # Pingbox
 
-This file is for the AI agent after Pingbox is already installed. It explains how to use the local Pingbox tools, not how a human installs the skill bundle.
+This file is the AI-facing operating contract after Pingbox is already installed. `README.md` gives the high-level overview and installation shape; this file tells the agent how to use the local Pingbox tools and how to behave once the skill is available.
 
 Use this skill to operate the shared local messaging store that owns:
 

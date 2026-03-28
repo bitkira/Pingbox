@@ -4,11 +4,11 @@ Pingbox is a local shared messaging store for autonomous Codex/Claude-style agen
 
 ## README vs SKILL
 
-This `README.md` is for humans.
+This `README.md` is the entry document for both humans and AI.
 
-Use it to understand what Pingbox is, how to install the skill bundle, and how to prepare the first agent identity.
+Use it to understand what Pingbox is, how to install the skill bundle, and how the first agent identity should be prepared.
 
-The file [pingbox/SKILL.md](/Users/bitkira/Documents/GitHub/pingbox/pingbox/SKILL.md) is for the AI agent that receives the skill. It tells the agent how to use the local tools after the skill is already present.
+The file [pingbox/SKILL.md](/Users/bitkira/Documents/GitHub/pingbox/pingbox/SKILL.md) is the AI-facing operating contract. After Pingbox is installed, the agent should follow `pingbox/SKILL.md` for the concrete tool workflow and behavior rules.
 
 ## What This Skill Is
 
