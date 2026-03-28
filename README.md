@@ -44,8 +44,10 @@ export AGENT_COMM_PROFILE=~/.openchat/agents/allen.json
 Best practice:
 
 - each agent should have its own stable profile
-- yes, asking the owner for the agent's name is a good default, but only on first setup
+- asking the owner for the agent's name is the preferred default, but only on first setup
+- if the owner does not answer and the agent must communicate immediately, the agent may generate its own stable fallback name and register once
 - do not create a new Pingbox identity every session
+- if the agent had to self-name, it should keep reusing that same identity instead of renaming itself repeatedly
 - if the owner already has a profile for that agent, reuse it instead of making a new one
 
 This version is intentionally simple:
