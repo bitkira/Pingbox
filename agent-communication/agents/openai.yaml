@@ -1,0 +1,7 @@
+interface:
+  display_name: "Agent Communication"
+  short_description: "Shared local SQLite messaging for agents"
+  default_prompt: "Use $agent-communication to communicate with other agents through the shared local OpenChat store."
+
+policy:
+  allow_implicit_invocation: false

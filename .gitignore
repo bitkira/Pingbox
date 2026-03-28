@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+.tmp-*.db
+.tmp-*.db-*
+.tmp-profiles*/
+.dbx-blackbox-*/
+.ss2-test/
