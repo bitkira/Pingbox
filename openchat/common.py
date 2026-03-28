@@ -9,11 +9,22 @@ from pathlib import Path
 APP_DIR = Path.home() / ".openchat"
 PROFILES_DIR = APP_DIR / "agents"
 DEFAULT_DB_PATH = APP_DIR / "openchat.db"
+RUNTIME_DIR = APP_DIR / "runtime"
+RUNTIME_AGENTS_DIR = RUNTIME_DIR / "agents"
+RUNTIME_SESSIONS_DIR = RUNTIME_DIR / "sessions"
+RUNTIME_LOGS_DIR = RUNTIME_DIR / "logs"
+RUNTIME_CONFIG_PATH = RUNTIME_DIR / "config.json"
+RUNTIME_PID_PATH = RUNTIME_DIR / "daemon.pid"
+RUNTIME_DAEMON_STATE_PATH = RUNTIME_DIR / "daemon-state.json"
 
 
 def ensure_app_dirs() -> None:
     APP_DIR.mkdir(parents=True, exist_ok=True)
     PROFILES_DIR.mkdir(parents=True, exist_ok=True)
+    RUNTIME_DIR.mkdir(parents=True, exist_ok=True)
+    RUNTIME_AGENTS_DIR.mkdir(parents=True, exist_ok=True)
+    RUNTIME_SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
+    RUNTIME_LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def now_iso() -> str:

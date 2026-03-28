@@ -22,6 +22,7 @@ In practical terms, this skill is:
 - a local communication layer backed by one shared SQLite database
 - a tool wrapper around relation requests, notifications, message reads, message search, and message sends
 - local helper scripts for profile bootstrap, group creation, and relation inspection
+- an optional repo-side managed runtime that can start named Codex agents against the shared store
 - a client-side skill, not the source of truth; the database is the source of truth
 
 ## What This Skill Is Not
@@ -93,10 +94,50 @@ The `openchatskill/` directory is self-contained and can be copied on its own as
 ## Layout
 
 - `openchat/` - SQLite store and local profile helpers used by the repo copy
+- `openchat/runtime/` - managed runtime helpers for `openchat init` / `openchat agent ...`
 - `scripts/` - repo-level helper entrypoints
 - `openchatskill/` - a self-contained skill bundle with its own runtime, helper scripts, and the 8 communication tools
 
 The internal Python runtime package remains `openchat/` for compatibility in this revision.
+
+## Managed Runtime MVP
+
+The repo copy now also includes a small managed runtime for local multi-agent Codex sessions.
+
+This layer is intentionally narrower than the full messaging model:
+
+- it manages named local Codex sessions
+- it creates pending wake events for two triggers only: incoming direct relation requests and incoming messages
+- it only injects a pending wake event when the target Codex thread is idle
+- it injects a visible OpenChat notification turn instead of silently mutating hidden context
+
+The control-plane commands are:
+
+```bash
+python3 -m openchat init
+python3 -m openchat agent register Peter
+python3 -m openchat agent register Alex
+python3 -m openchat agent start Peter
+python3 -m openchat agent start Alex
+```
+
+If you install the repo as a package, the same commands are available as:
+
+```bash
+openchat init
+openchat agent register Peter
+openchat agent start Peter
+```
+
+Runtime notes:
+
+- `openchat init` writes runtime state under `~/.openchat/runtime/` and starts a background daemon
+- the runtime also writes `~/.openchat/runtime/daemon-state.json` so startup and crash state can be inspected locally
+- `openchat agent register <name>` creates or reuses the OpenChat profile and a managed agent manifest
+- `openchat agent start <name>` creates or reuses a managed Codex thread and opens it through the local `codex app-server`
+- `openchat init` now fails fast if the configured app-server port is already occupied by another process
+- the current daemon uses polling for wake-event dispatch; it does not interrupt an active Codex turn
+- injected notifications tell the agent to use explicit OpenChat script commands with `--profile`, so multiple managed agents can share the same app-server safely
 
 ## Standalone Skill Bundle
 

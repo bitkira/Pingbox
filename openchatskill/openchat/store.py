@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sqlite3
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -153,6 +154,22 @@ class OpenChatStore:
                     PRIMARY KEY (conversation_uid, agent_uid, start_seq)
                 );
 
+                CREATE TABLE IF NOT EXISTS wake_events (
+                    event_uid TEXT PRIMARY KEY,
+                    target_agent_uid TEXT NOT NULL REFERENCES agents(agent_uid),
+                    source_agent_uid TEXT NOT NULL REFERENCES agents(agent_uid),
+                    kind TEXT NOT NULL,
+                    target_type TEXT NOT NULL,
+                    target_uid TEXT NOT NULL,
+                    message_uid TEXT REFERENCES messages(message_uid),
+                    relation_request_uid TEXT REFERENCES relation_requests(request_uid),
+                    payload_json TEXT NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'pending',
+                    created_at TEXT NOT NULL,
+                    delivered_at TEXT,
+                    last_error TEXT
+                );
+
                 CREATE INDEX IF NOT EXISTS idx_relation_requests_target
                     ON relation_requests (target_type, target_uid, status);
                 CREATE INDEX IF NOT EXISTS idx_messages_conversation_created_at
@@ -161,6 +178,8 @@ class OpenChatStore:
                     ON messages (text);
                 CREATE INDEX IF NOT EXISTS idx_visibility_windows_agent
                     ON conversation_visibility_windows (agent_uid, conversation_uid, start_seq, end_seq);
+                CREATE INDEX IF NOT EXISTS idx_wake_events_target_status
+                    ON wake_events (target_agent_uid, status, created_at);
                 """
             )
 
@@ -256,6 +275,72 @@ class OpenChatStore:
                 "SELECT * FROM agents WHERE agent_uid = ? AND status = 'active'",
                 (agent_uid,),
             ).fetchone()
+
+    def _agent_identity(self, conn: sqlite3.Connection, agent_uid: str) -> ResolvedTarget:
+        row = conn.execute(
+            """
+            SELECT handle, display_name
+            FROM agents
+            WHERE agent_uid = ? AND status = 'active'
+            """,
+            (agent_uid,),
+        ).fetchone()
+        if not row:
+            raise OpenChatError("target_not_found")
+        return ResolvedTarget("agent", agent_uid, row["handle"], row["display_name"])
+
+    def _enqueue_wake_event(
+        self,
+        conn: sqlite3.Connection,
+        *,
+        target_agent_uid: str,
+        source: ResolvedTarget,
+        target: ResolvedTarget,
+        kind: str,
+        message_uid: str | None = None,
+        relation_request_uid: str | None = None,
+    ) -> None:
+        payload = {
+            "source_uid": source.uid,
+            "source_handle": source.handle,
+            "source_display_name": source.display_name,
+            "source_label": source.label,
+            "target_type": target.type,
+            "target_uid": target.uid,
+            "target_handle": target.handle,
+            "target_display_name": target.display_name,
+            "target_label": target.label,
+        }
+        conn.execute(
+            """
+            INSERT INTO wake_events (
+                event_uid,
+                target_agent_uid,
+                source_agent_uid,
+                kind,
+                target_type,
+                target_uid,
+                message_uid,
+                relation_request_uid,
+                payload_json,
+                status,
+                created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)
+            """,
+            (
+                new_id("evt"),
+                target_agent_uid,
+                source.uid,
+                kind,
+                target.type,
+                target.uid,
+                message_uid,
+                relation_request_uid,
+                json.dumps(payload, ensure_ascii=False, sort_keys=True),
+                now_iso(),
+            ),
+        )
 
     def _resolve_target(self, conn: sqlite3.Connection, target_type: str, raw_id: str) -> ResolvedTarget:
         if target_type not in {"agent", "group"}:
@@ -568,6 +653,7 @@ class OpenChatStore:
         target_id = target_data.get("id", "")
         message = payload.get("message")
         with self.tx() as conn:
+            source = self._agent_identity(conn, caller_uid)
             target = self._resolve_target(conn, target_type, target_id)
             if target.type == "agent":
                 if target.uid == caller_uid:
@@ -586,14 +672,24 @@ class OpenChatStore:
             ).fetchone()
             if existing:
                 raise OpenChatError("already_requested")
+            request_uid = new_id("req")
             conn.execute(
                 """
                 INSERT INTO relation_requests
                 (request_uid, source_agent_uid, target_type, target_uid, message, status, created_at)
                 VALUES (?, ?, ?, ?, ?, 'pending', ?)
                 """,
-                (new_id("req"), caller_uid, target.type, target.uid, message, now_iso()),
+                (request_uid, caller_uid, target.type, target.uid, message, now_iso()),
             )
+            if target.type == "agent":
+                self._enqueue_wake_event(
+                    conn,
+                    target_agent_uid=target.uid,
+                    source=source,
+                    target=target,
+                    kind="incoming_relation_request",
+                    relation_request_uid=request_uid,
+                )
         return "success"
 
     def read_relation_requests(self, caller_uid: str) -> str:
@@ -858,12 +954,76 @@ class OpenChatStore:
             lines.append("empty")
         return "\n".join(lines)
 
+    def list_pending_wake_events(
+        self,
+        *,
+        target_agent_uid: str | None = None,
+        limit: int = 100,
+    ) -> list[dict[str, Any]]:
+        params: list[Any] = []
+        clauses = ["status = 'pending'"]
+        if target_agent_uid:
+            clauses.append("target_agent_uid = ?")
+            params.append(target_agent_uid)
+        with self.tx() as conn:
+            rows = conn.execute(
+                f"""
+                SELECT *
+                FROM wake_events
+                WHERE {' AND '.join(clauses)}
+                ORDER BY created_at ASC
+                LIMIT ?
+                """,
+                (*params, max(1, min(limit, 500))),
+            ).fetchall()
+        events: list[dict[str, Any]] = []
+        for row in rows:
+            events.append(
+                {
+                    "event_uid": row["event_uid"],
+                    "target_agent_uid": row["target_agent_uid"],
+                    "source_agent_uid": row["source_agent_uid"],
+                    "kind": row["kind"],
+                    "target_type": row["target_type"],
+                    "target_uid": row["target_uid"],
+                    "message_uid": row["message_uid"],
+                    "relation_request_uid": row["relation_request_uid"],
+                    "payload": json.loads(row["payload_json"]),
+                    "created_at": row["created_at"],
+                    "last_error": row["last_error"],
+                }
+            )
+        return events
+
+    def mark_wake_event_delivered(self, event_uid: str) -> None:
+        with self.tx() as conn:
+            conn.execute(
+                """
+                UPDATE wake_events
+                SET status = 'delivered', delivered_at = ?, last_error = NULL
+                WHERE event_uid = ?
+                """,
+                (now_iso(), event_uid),
+            )
+
+    def record_wake_event_error(self, event_uid: str, error: str) -> None:
+        with self.tx() as conn:
+            conn.execute(
+                """
+                UPDATE wake_events
+                SET last_error = ?
+                WHERE event_uid = ? AND status = 'pending'
+                """,
+                (error[:500], event_uid),
+            )
+
     def send_messages(self, caller_uid: str, payload: dict[str, Any]) -> tuple[str, list[str]]:
         items = payload.get("items")
         if not isinstance(items, list) or not items:
             raise OpenChatError("invalid_target")
         failures: list[str] = []
         with self.tx() as conn:
+            source = self._agent_identity(conn, caller_uid)
             for item in items:
                 target_data = item.get("target") or {}
                 text = str(item.get("text", ""))
@@ -898,13 +1058,14 @@ class OpenChatStore:
                             ).fetchall()
                         ]
                     seq = self._conversation_max_seq(conn, conversation["conversation_uid"]) + 1
+                    message_uid = new_id("msg")
                     conn.execute(
                         """
                         INSERT INTO messages
                         (message_uid, conversation_uid, seq, sender_agent_uid, text, created_at)
                         VALUES (?, ?, ?, ?, ?, ?)
                         """,
-                        (new_id("msg"), conversation["conversation_uid"], seq, caller_uid, text, now_iso()),
+                        (message_uid, conversation["conversation_uid"], seq, caller_uid, text, now_iso()),
                     )
                     self._mark_inbox_activity(
                         conn,
@@ -913,6 +1074,15 @@ class OpenChatStore:
                         seq,
                         recipient_uids,
                     )
+                    for recipient_uid in recipient_uids:
+                        self._enqueue_wake_event(
+                            conn,
+                            target_agent_uid=recipient_uid,
+                            source=source,
+                            target=target,
+                            kind="incoming_message",
+                            message_uid=message_uid,
+                        )
                 except OpenChatError as exc:
                     raw_id = target_data.get("id", "")
                     failures.append(f"{target_data.get('type', 'agent')} {raw_id}: {exc.code}")
