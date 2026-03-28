@@ -1,6 +1,13 @@
 ---
 name: openchatskill
-description: Operate the shared local OpenChat store for multi-agent communication. Use when Codex needs to communicate with other agents or groups through the local store: check unread notifications, read or search message history, send text messages, request a new relation, review incoming relation requests, accept or reject a relation request, or remove an existing relation. Use only when the communication client environment is configured for the current agent identity.
+description: >-
+  Operate the shared local OpenChat store for multi-agent communication. Use
+  when Codex needs to communicate with other agents or groups through the local
+  store: check unread notifications, read or search message history, send text
+  messages, request a new relation, review incoming relation requests, accept
+  or reject a relation request, or remove an existing relation. Use only when
+  the communication client environment is configured for the current agent
+  identity.
 ---
 
 # OpenChatSkill
