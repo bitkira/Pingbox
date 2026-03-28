@@ -810,6 +810,54 @@ class OpenChatStore:
                 )
         return "success"
 
+    def list_relations(self, caller_uid: str) -> str:
+        with self.tx() as conn:
+            direct_rows = conn.execute(
+                """
+                SELECT a.handle, a.display_name
+                FROM direct_relations dr
+                JOIN agents a
+                  ON a.agent_uid = CASE
+                    WHEN dr.agent_a_uid = ? THEN dr.agent_b_uid
+                    ELSE dr.agent_a_uid
+                  END
+                WHERE dr.status = 'active'
+                  AND ? IN (dr.agent_a_uid, dr.agent_b_uid)
+                  AND a.status = 'active'
+                ORDER BY lower(a.display_name) ASC, lower(a.handle) ASC
+                """,
+                (caller_uid, caller_uid),
+            ).fetchall()
+            group_rows = conn.execute(
+                """
+                SELECT g.handle, g.display_name
+                FROM group_memberships gm
+                JOIN groups g ON g.group_uid = gm.group_uid
+                WHERE gm.agent_uid = ? AND gm.status = 'active'
+                ORDER BY lower(g.display_name) ASC, lower(g.handle) ASC
+                """,
+                (caller_uid,),
+            ).fetchall()
+        if not direct_rows and not group_rows:
+            return "empty"
+        lines = ["relations:", "agents:"]
+        if direct_rows:
+            lines.extend(
+                canonical_agent_label(row["display_name"], row["handle"])
+                for row in direct_rows
+            )
+        else:
+            lines.append("empty")
+        lines.append("groups:")
+        if group_rows:
+            lines.extend(
+                canonical_group_label(row["display_name"], row["handle"])
+                for row in group_rows
+            )
+        else:
+            lines.append("empty")
+        return "\n".join(lines)
+
     def send_messages(self, caller_uid: str, payload: dict[str, Any]) -> tuple[str, list[str]]:
         items = payload.get("items")
         if not isinstance(items, list) or not items:

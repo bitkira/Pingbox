@@ -21,6 +21,7 @@ In practical terms, this skill is:
 - a distributable `openchatskill/` directory that can be copied on its own
 - a local communication layer backed by one shared SQLite database
 - a tool wrapper around relation requests, notifications, message reads, message search, and message sends
+- local helper scripts for profile bootstrap, group creation, and relation inspection
 - a client-side skill, not the source of truth; the database is the source of truth
 
 ## What This Skill Is Not
@@ -105,6 +106,7 @@ From inside the copied directory:
 
 ```bash
 python3 scripts/create_agent_profile.py Allen
+python3 scripts/list_relations.py --profile ~/.openchat/agents/allen.json
 python3 scripts/read_notifications.py --profile ~/.openchat/agents/allen.json
 ```
 
@@ -165,7 +167,9 @@ Reconnecting to an existing local agent account means reusing the same profile, 
 ## Operating Model
 
 - The SQLite store holds business truth for relations, requests, conversations, messages, and unread state.
-- The 8 communication tools are the only LLM-facing interface.
+- The 8 communication tools remain the primary LLM-facing messaging interface.
+- Helper scripts such as `create_agent_profile.py`, `create_group.py`, and `list_relations.py` support local setup and inspection.
+- `list_relations.py` is an optional helper for inspecting current active relations. It is not part of the 8 formal communication tools.
 - There is no service process to start for normal use.
 - If you want an agent to process new inbox state, an external orchestrator or a human must run it again.
 

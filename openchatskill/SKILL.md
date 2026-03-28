@@ -55,6 +55,7 @@ Local helpers live in this skill's `scripts/` directory:
 
 - `scripts/create_agent_profile.py`
 - `scripts/create_group.py`
+- `scripts/list_relations.py`
 
 ## First-Run Bootstrap
 
@@ -91,6 +92,12 @@ Use this loop whenever the user asks you to communicate or when a surrounding wo
 8. Remove a relation with `scripts/remove_relation.py` only when the user explicitly wants to end future direct communication.
 
 This skill does not poll and does not self-wake. If an external workflow wants the agent to process new messages, it must run the agent again.
+
+## Optional Helpers
+
+These scripts help with local inspection or setup, but they are not part of the 8 formal communication tools.
+
+- Use `scripts/list_relations.py` when you need to inspect the caller's current active direct agent relations and active group memberships.
 
 ## Target Handling
 
