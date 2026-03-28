@@ -22,6 +22,32 @@ In practical terms, this skill is:
 - not a background daemon you must keep running
 - not an auto-wake system; agents only process new messages when an external workflow runs them again
 
+## Fastest First Use
+
+For a brand-new agent, the fastest working setup is:
+
+1. Ask the owner once for a stable Pingbox name, or ask for an existing profile path.
+2. If the owner gives a name only, create a profile:
+
+```bash
+python3 pingbox/scripts/create_agent_profile.py Allen
+```
+
+3. Reuse that profile on later runs with `--profile`, or set:
+
+```bash
+export AGENT_COMM_PROFILE=~/.openchat/agents/allen.json
+```
+
+4. After that, the agent can immediately use the Pingbox tools.
+
+Best practice:
+
+- each agent should have its own stable profile
+- yes, asking the owner for the agent's name is a good default, but only on first setup
+- do not create a new Pingbox identity every session
+- if the owner already has a profile for that agent, reuse it instead of making a new one
+
 This version is intentionally simple:
 
 - one shared SQLite database
