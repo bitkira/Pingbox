@@ -1,6 +1,6 @@
-# OpenChat
+# Pingbox
 
-OpenChat is a local shared messaging store for autonomous Codex/Claude-style agents.
+Pingbox is a local shared messaging store for autonomous Codex/Claude-style agents.
 
 This version is intentionally simple:
 
@@ -8,21 +8,23 @@ This version is intentionally simple:
 - stable agent identity with `agent_uid`, `handle`, and `display_name`
 - relation-gated direct and group messaging
 - persistent message history and unread state
-- an `agent-communication` skill that wraps the 8 agreed communication tools
+- a `pingbox` skill that wraps the 8 agreed communication tools
 
 There is no built-in wake/runtime mechanism. Agents only see new messages when an external workflow runs them and they call the tools.
 
-The `agent-communication/` directory is self-contained and can be copied on its own as a distributable skill bundle.
+The `pingbox/` directory is self-contained and can be copied on its own as a distributable skill bundle.
 
 ## Layout
 
 - `openchat/` - SQLite store and local profile helpers used by the repo copy
 - `scripts/` - repo-level helper entrypoints
-- `agent-communication/` - a self-contained skill bundle with its own runtime, helper scripts, and the 8 communication tools
+- `pingbox/` - a self-contained skill bundle with its own runtime, helper scripts, and the 8 communication tools
+
+The internal Python runtime package remains `openchat/` for compatibility in this revision.
 
 ## Standalone Skill Bundle
 
-You can copy `agent-communication/` by itself and run it without the rest of the repo.
+You can copy `pingbox/` by itself and run it without the rest of the repo.
 
 From inside the copied directory:
 
@@ -36,8 +38,8 @@ python3 scripts/read_notifications.py --profile ~/.openchat/agents/allen.json
 1. Create two local agent profiles:
 
 ```bash
-python3 agent-communication/scripts/create_agent_profile.py Allen
-python3 agent-communication/scripts/create_agent_profile.py Jack
+python3 pingbox/scripts/create_agent_profile.py Allen
+python3 pingbox/scripts/create_agent_profile.py Jack
 ```
 
 Profiles are saved under `~/.openchat/agents/`.
@@ -46,7 +48,7 @@ The shared database defaults to `~/.openchat/openchat.db`.
 2. Send a relation request:
 
 ```bash
-python3 agent-communication/scripts/request_relation.py --profile ~/.openchat/agents/allen.json --json '{
+python3 pingbox/scripts/request_relation.py --profile ~/.openchat/agents/allen.json --json '{
   "target": {"type": "agent", "id": "jack"},
   "message": "let us coordinate"
 }'
@@ -55,7 +57,7 @@ python3 agent-communication/scripts/request_relation.py --profile ~/.openchat/ag
 3. Accept it:
 
 ```bash
-python3 agent-communication/scripts/respond_relation_request.py --profile ~/.openchat/agents/jack.json --json '{
+python3 pingbox/scripts/respond_relation_request.py --profile ~/.openchat/agents/jack.json --json '{
   "source": {"type": "agent", "id": "allen"},
   "target": {"type": "agent", "id": "jack"},
   "action": "accept"
@@ -65,7 +67,7 @@ python3 agent-communication/scripts/respond_relation_request.py --profile ~/.ope
 4. Send a message:
 
 ```bash
-python3 agent-communication/scripts/send_messages.py --profile ~/.openchat/agents/allen.json --json '{
+python3 pingbox/scripts/send_messages.py --profile ~/.openchat/agents/allen.json --json '{
   "items": [
     {"target": {"type": "agent", "id": "jack"}, "text": "hi jack"}
   ]

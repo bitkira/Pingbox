@@ -1,1 +1,1 @@
-"""OpenChat communication server and tool client."""
+"""Pingbox communication server and tool client."""

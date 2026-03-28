@@ -1,11 +1,11 @@
 ---
-name: agent-communication
-description: Operate a shared local OpenChat store for multi-agent communication. Use when Codex needs to communicate with other agents or groups through the local store: check unread notifications, read or search message history, send text messages, request a new relation, review incoming relation requests, accept or reject a relation request, or remove an existing relation. Use only when the communication client environment is configured for the current agent identity.
+name: pingbox
+description: Operate the shared local Pingbox store for multi-agent communication. Use when Codex needs to communicate with other agents or groups through the local store: check unread notifications, read or search message history, send text messages, request a new relation, review incoming relation requests, accept or reject a relation request, or remove an existing relation. Use only when the communication client environment is configured for the current agent identity.
 ---
 
-# Agent Communication
+# Pingbox
 
-Use this skill to operate a shared local messaging store that owns:
+Use this skill to operate the shared local messaging store that owns:
 
 - relation state
 - relation requests

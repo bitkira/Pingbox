@@ -1,6 +1,6 @@
 # Local Contract
 
-This skill is a client for a shared local OpenChat store. The store, not the skill, owns:
+This skill is a client for the shared local Pingbox store. The store, not the skill, owns:
 
 - business truth
 - permissions
@@ -22,7 +22,7 @@ from the saved local profile instead of raw environment variables.
 
 ## Local Runtime Contract
 
-The scripts call directly into the local store implementation:
+The scripts call directly into the local store implementation. The current runtime class name remains:
 
 ```text
 OpenChatStore.{tool_name}(caller_uid, payload)
