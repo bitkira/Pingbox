@@ -11,10 +11,11 @@ from typing import Any
 from ..admin import register_agent_profile
 from ..client import load_profile, resolve_db_path
 from ..common import RUNTIME_LOGS_DIR, ensure_app_dirs, normalize_handle, now_iso
-from .app_server import app_server_ready, thread_start
+from .app_server import app_server_ready, thread_read, thread_start
 from .session import (
     clear_daemon_state,
     clear_session,
+    ensure_codex_session_stub,
     is_pid_alive,
     load_agent_manifest,
     load_daemon_state,
@@ -192,6 +193,20 @@ def _bootstrap_turn_text(manifest: dict[str, Any]) -> str:
     )
 
 
+def _ensure_local_thread_session(thread: dict[str, Any], workdir: str) -> None:
+    thread_path = str(thread.get("path") or "").strip()
+    thread_id = str(thread.get("id") or "").strip()
+    if not thread_path or not thread_id:
+        return
+    ensure_codex_session_stub(
+        thread_id=thread_id,
+        thread_path=thread_path,
+        cwd=workdir,
+        cli_version=str(thread.get("cliVersion") or "0.117.0"),
+        model_provider=str(thread.get("modelProvider") or "unknown"),
+    )
+
+
 def start_managed_agent(handle: str, *, persist_session: bool = True) -> dict[str, Any]:
     config = ensure_daemon_running()
     manifest = _resolve_agent_manifest(handle)
@@ -210,11 +225,15 @@ def start_managed_agent(handle: str, *, persist_session: bool = True) -> dict[st
     bootstrap_prompt: str | None = None
     if not thread_id:
         thread = thread_start(url, manifest["workdir"])["thread"]
+        _ensure_local_thread_session(thread, manifest["workdir"])
         thread_id = str(thread["id"])
         manifest["thread_id"] = thread_id
         manifest["updated_at"] = now_iso()
         save_agent_manifest(resolved_handle, manifest)
         bootstrap_prompt = _bootstrap_turn_text(manifest)
+    else:
+        thread = thread_read(url, thread_id, include_turns=False)["thread"]
+        _ensure_local_thread_session(thread, manifest["workdir"])
 
     if persist_session:
         save_session(

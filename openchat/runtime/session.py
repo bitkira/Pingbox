@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -139,3 +140,34 @@ def save_daemon_state(state: dict[str, Any]) -> dict[str, Any]:
 def clear_daemon_state() -> None:
     if RUNTIME_DAEMON_STATE_PATH.exists():
         RUNTIME_DAEMON_STATE_PATH.unlink()
+
+
+def ensure_codex_session_stub(
+    *,
+    thread_id: str,
+    thread_path: str,
+    cwd: str,
+    cli_version: str | None = None,
+    model_provider: str | None = None,
+) -> Path:
+    path = Path(thread_path).expanduser()
+    if path.exists():
+        return path
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+    session_meta = {
+        "timestamp": timestamp,
+        "type": "session_meta",
+        "payload": {
+            "id": thread_id,
+            "timestamp": timestamp,
+            "cwd": cwd,
+            "originator": "codex_cli_rs",
+            "cli_version": cli_version or "unknown",
+            "source": "cli",
+            "model_provider": model_provider or "unknown",
+        },
+    }
+    path.write_text(json.dumps(session_meta, ensure_ascii=False) + "\n", encoding="utf-8")
+    return path
