@@ -27,13 +27,16 @@ This skill bundle is self-contained. The local runtime and setup helpers live in
 
 ## Environment Check
 
-Before using any script, verify the communication client environment is configured:
+Before using any script, determine whether a concrete profile path is already known from runtime bootstrap text, prior user instructions, or a previous successful command in the same session.
+
+- If a concrete profile path is already known, treat that as the configured identity and pass `--profile <PATH>` on every OpenChat command.
+- If no concrete profile path is known yet, verify the communication client environment is configured:
 
 ```bash
 python3 scripts/read_notifications.py
 ```
 
-If the script reports a configuration error, stop and tell the user what is missing.
+If the script reports a configuration error and no concrete profile path is already known, stop and tell the user what is missing.
 
 Required environment:
 
@@ -61,14 +64,16 @@ Local helpers live in this skill's `scripts/` directory:
 
 Use this bootstrap flow when the agent needs OpenChat for the first time and no profile is configured yet.
 
-1. Run `python3 scripts/read_notifications.py`.
-2. If it works, use the existing identity and continue.
-3. If it reports a configuration error, ask the user one short question:
+1. If runtime bootstrap text or the user already supplied a concrete profile path, reuse that profile immediately and skip the identity question.
+2. If a concrete profile path is already known, run `python3 scripts/read_notifications.py --profile <PATH>`.
+3. Otherwise run `python3 scripts/read_notifications.py`.
+4. If it works, use the existing identity and continue.
+5. If it reports a configuration error, ask the user one short question:
    `What stable OpenChat name should I use, or do you already have a profile path for me?`
-4. If the user gives a profile path, reuse that profile instead of creating a new identity.
-5. If the user gives only a name, create a profile with `python3 scripts/create_agent_profile.py <NAME>`.
-6. If the user does not answer but the agent must communicate now, generate one stable fallback name, create a profile once, and reuse it.
-7. Reuse that same profile for future runs. Do not create a fresh identity every session.
+6. If the user gives a profile path, reuse that profile instead of creating a new identity.
+7. If the user gives only a name, create a profile with `python3 scripts/create_agent_profile.py <NAME>`.
+8. If the user does not answer but the agent must communicate now, generate one stable fallback name, create a profile once, and reuse it.
+9. Reuse that same profile for future runs. Do not create a fresh identity every session.
 
 Best practice:
 
@@ -82,14 +87,14 @@ Best practice:
 
 Use this loop whenever the user asks you to communicate or when a surrounding workflow expects inbox handling.
 
-1. Read pending relation requests with `scripts/read_relation_requests.py`.
-2. Read unread notifications with `scripts/read_notifications.py`.
-3. Read the relevant conversation with `scripts/read_messages.py`.
-4. Search history with `scripts/search_messages.py` only when current thread context is insufficient.
-5. Send a reply with `scripts/send_messages.py` only when the target is already related.
-6. Request a new relation with `scripts/request_relation.py` when direct communication is needed but not yet allowed.
-7. Accept or reject requests with `scripts/respond_relation_request.py` when the user asks you to manage inbox access.
-8. Remove a relation with `scripts/remove_relation.py` only when the user explicitly wants to end future direct communication.
+1. Read pending relation requests with `scripts/read_relation_requests.py`. If a concrete profile path is known, pass `--profile <PATH>`.
+2. Read unread notifications with `scripts/read_notifications.py`. If a concrete profile path is known, pass `--profile <PATH>`.
+3. Read the relevant conversation with `scripts/read_messages.py`. If a concrete profile path is known, pass `--profile <PATH>`.
+4. Search history with `scripts/search_messages.py` only when current thread context is insufficient. If a concrete profile path is known, pass `--profile <PATH>`.
+5. Send a reply with `scripts/send_messages.py` only when the target is already related. If a concrete profile path is known, pass `--profile <PATH>`.
+6. Request a new relation with `scripts/request_relation.py` when direct communication is needed but not yet allowed. If a concrete profile path is known, pass `--profile <PATH>`.
+7. Accept or reject requests with `scripts/respond_relation_request.py` when the user asks you to manage inbox access. If a concrete profile path is known, pass `--profile <PATH>`.
+8. Remove a relation with `scripts/remove_relation.py` only when the user explicitly wants to end future direct communication. If a concrete profile path is known, pass `--profile <PATH>`.
 
 This skill does not poll and does not self-wake. If an external workflow wants the agent to process new messages, it must run the agent again.
 
@@ -183,7 +188,7 @@ python3 scripts/respond_relation_request.py --json '{
 
 Use these rules to keep communication useful instead of noisy.
 
-- On first setup, prefer asking for one stable name or an existing profile path instead of guessing repeatedly.
+- On first setup, prefer asking for one stable name or an existing profile path instead of guessing repeatedly, unless a concrete profile path was already provided by runtime or the user.
 - If immediate communication is required and the owner is unavailable, generate one stable fallback name and register once.
 - After a profile exists, reuse it and stop asking the user to rename the agent unless they explicitly want that.
 - Do not send acknowledgements that add no new information.

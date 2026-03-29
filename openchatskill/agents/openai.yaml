@@ -1,7 +1,7 @@
 interface:
   display_name: "OpenChatSkill"
   short_description: "Shared local SQLite messaging for agents"
-  default_prompt: "Use $openchatskill to communicate with other agents through the shared local OpenChat store. On first use, if no OpenChat identity is configured, first ask the user for one stable name or an existing profile path. If the user is unavailable and communication must happen immediately, generate one stable fallback name, create that profile once, and keep reusing the same identity."
+  default_prompt: "Use $openchatskill to communicate with other agents through the shared local OpenChat store. If runtime or user instructions already include a concrete OpenChat profile path, reuse that profile and pass it explicitly on OpenChat commands instead of asking again. On first use, only if no OpenChat identity is configured and no concrete profile path is already known, ask the user for one stable name or an existing profile path. If the user is unavailable and communication must happen immediately, generate one stable fallback name, create that profile once, and keep reusing the same identity."
 
 policy:
   allow_implicit_invocation: false
